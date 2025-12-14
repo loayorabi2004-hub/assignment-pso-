@@ -1,0 +1,70 @@
+Import numpy as np
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.datasets import load_breast_cancer
+from sklearn.metrics import accuracy_score
+data = load_breast_cancer()
+X = data.data
+y = data.target
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42
+)
+num_particles = 3
+num_features = X.shape[1]
+num_iterations = 10
+
+w = 0.5      
+c1 = 1.5     
+c2 = 1.5   
+particles = np.random.randint(0, 2, (num_particles, num_features))
+velocities = np.random.uniform(-1, 1, (num_particles, num_features))
+
+pbest_positions = particles.copy()
+pbest_scores = np.zeros(num_particles)
+
+gbest_position = None
+gbest_score = 0
+def fitness_function(particle):
+    if np.sum(particle) == 0:
+        return 0
+
+    selected_features = np.where(particle == 1)[0]
+    X_train_sel = X_train[:, selected_features]
+    X_test_sel = X_test[:, selected_features]
+
+    model = DecisionTreeClassifier(random_state=42)
+    model.fit(X_train_sel, y_train)
+
+    predictions = model.predict(X_test_sel)
+    return accuracy_score(y_test, predictions)
+def fitness_function(particle):
+    if np.sum(particle) == 0:
+        return 0
+
+    selected_features = np.where(particle == 1)[0]
+    X_train_sel = X_train[:, selected_features]
+    X_test_sel = X_test[:, selected_features]
+
+    model = DecisionTreeClassifier(random_state=42)
+    model.fit(X_train_sel, y_train)
+
+    predictions = model.predict(X_test_sel)
+    return accuracy_score(y_test, predictions)
+for iteration in range(num_iterations):
+    print(f"\nIteration {iteration + 1}")
+
+    for i in range(num_particles):
+        score = fitness_function(particles[i])
+
+        if score > pbest_scores[i]:
+            pbest_scores[i] = score
+            pbest_positions[i] = particles[i].copy()
+
+        if score > gbest_score:
+            gbest_score = score
+            gbest_position = particles[i].copy()
+
+    for i in range(num_particles):
+        r1 = np.random.rand(num_features)
+        r2 = np.random.rand(num_features)
